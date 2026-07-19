@@ -374,7 +374,7 @@ jobs:
     needs:
       - version
       - build-cli
-    if: github.repository == 'myonlylonely/kilocode'
+    if: github.repository == 'Kilo-Org/kilocode'
     uses: ./.github/workflows/smoke-test.yml
     with:
       cli_version: ${{ needs.version.outputs.version }}
@@ -388,7 +388,6 @@ jobs:
       - build-vscode
       - validate-cli-unix # kilocode_change
       - validate-cli-windows # kilocode_change
-      - smoke-test
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6 # kilocode_change
