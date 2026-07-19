@@ -32,7 +32,7 @@ env:
 jobs:
   publish:
     if: >-
-      github.repository == 'Kilo-Org/kilocode' &&
+      github.repository == 'myonlylonely/kilocode' &&
       (
         (
           github.event_name == 'pull_request' &&

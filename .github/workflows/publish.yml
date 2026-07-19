@@ -42,7 +42,7 @@ permissions:
 jobs:
   version:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    if: github.repository == 'Kilo-Org/kilocode'
+    if: github.repository == 'myonlylonely/kilocode'
     steps:
       - uses: actions/checkout@v6 # kilocode_change
         with:
@@ -78,7 +78,7 @@ jobs:
   build-cli:
     needs: version
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    if: github.repository == 'Kilo-Org/kilocode'
+    if: github.repository == 'myonlylonely/kilocode'
     steps:
       - uses: actions/checkout@v6 # kilocode_change
         with:
@@ -326,7 +326,7 @@ jobs:
       - validate-cli-unix
       - validate-cli-windows
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    if: github.repository == 'Kilo-Org/kilocode'
+    if: github.repository == 'myonlylonely/kilocode'
     steps:
       - uses: actions/checkout@v6 # kilocode_change
 
@@ -374,7 +374,7 @@ jobs:
     needs:
       - version
       - build-cli
-    if: github.repository == 'Kilo-Org/kilocode'
+    if: github.repository == 'myonlylonely/kilocode'
     uses: ./.github/workflows/smoke-test.yml
     with:
       cli_version: ${{ needs.version.outputs.version }}

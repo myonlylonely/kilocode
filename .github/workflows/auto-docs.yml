@@ -30,7 +30,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (
-        github.repository == 'Kilo-Org/kilocode' &&
+        github.repository == 'myonlylonely/kilocode' &&
         github.event.pull_request.merged == true &&
         (
           startsWith(github.event.pull_request.title, 'feat:') ||
