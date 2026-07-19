@@ -41,7 +41,7 @@ permissions:
 
 jobs:
   version:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     if: github.repository == 'myonlylonely/kilocode'
     steps:
       - uses: actions/checkout@v6 # kilocode_change
@@ -77,7 +77,7 @@ jobs:
 
   build-cli:
     needs: version
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     if: github.repository == 'myonlylonely/kilocode'
     steps:
       - uses: actions/checkout@v6 # kilocode_change
@@ -325,7 +325,7 @@ jobs:
       - build-cli
       - validate-cli-unix
       - validate-cli-windows
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     if: github.repository == 'myonlylonely/kilocode'
     steps:
       - uses: actions/checkout@v6 # kilocode_change
