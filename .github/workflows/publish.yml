@@ -381,89 +381,26 @@ jobs:
     secrets: inherit
   # kilocode_change end
 
+  # kilocode_change start - fork publish: upload VSIX to GitHub Release only
+  # (no npm / marketplace / OpenVSX / AUR / Homebrew / GHCR / release commit)
   publish:
     needs:
       - version
       - build-cli
       - build-vscode
-      - validate-cli-unix # kilocode_change
-      - validate-cli-windows # kilocode_change
+      - validate-cli-unix
+      - validate-cli-windows
     runs-on: ubuntu-24.04
+    if: github.repository == 'myonlylonely/kilocode'
     steps:
-      - uses: actions/checkout@v6 # kilocode_change
-        # kilocode_change start
-        with:
-          persist-credentials: false
-        # kilocode_change end
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-bun
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - uses: actions/setup-node@v6 # kilocode_change
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-          package-manager-cache: false # kilocode_change
-
-      - name: Install @vscode/vsce
-        run: bun install -g @vscode/vsce
-
-      - name: Setup Git Committer
-        id: committer
-        uses: ./.github/actions/setup-git-committer
-        with:
-          # kilocode_change start
-          kilo-maintainer-app-id: ${{ secrets.KILO_MAINTAINER_APP_ID }}
-          kilo-maintainer-app-secret: ${{ secrets.KILO_MAINTAINER_APP_SECRET }}
-          # kilocode_change end
-
-      # kilocode_change start - download into /tmp and extract the tar.zst packed by build-cli
-      - uses: actions/download-artifact@v8
-        with:
-          name: kilo-cli.tar.zst
-          path: /tmp
-          skip-decompress: true
-
-      - name: Unpack CLI dist
-        run: |
-          mkdir -p packages/opencode/dist
-          tar --zstd -xf /tmp/kilo-cli.tar.zst -C packages/opencode/dist
-      # kilocode_change end
       - uses: actions/download-artifact@v8
         with:
           name: kilo-vscode
           path: packages/kilo-vscode/out
-
-      - name: Cache apt packages (AUR)
-        uses: actions/cache@v5 # kilocode_change
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-aur-${{ hashFiles('.github/workflows/publish.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-aur-
-
-      - name: Setup SSH for AUR
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pacman-package-manager
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AUR_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          git config --global user.email "kilo-maintainer[bot]@users.noreply.github.com"
-          git config --global user.name "kilo-maintainer[bot]"
-          ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts || true
 
       - run: ./script/publish.ts
         env:
@@ -471,8 +408,6 @@ jobs:
           KILO_RELEASE: ${{ needs.version.outputs.release }}
           KILO_PRE_RELEASE: ${{ inputs.pre_release }}
           GH_REPO: ${{ github.repository }}
-          AUR_KEY: ${{ secrets.AUR_KEY }}
-          GITHUB_TOKEN: ${{ steps.committer.outputs.token }}
-          NPM_CONFIG_PROVENANCE: true
-          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
-          OPENVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+  # kilocode_change end
