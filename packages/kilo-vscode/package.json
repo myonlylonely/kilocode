@@ -978,6 +978,15 @@
           "default": false,
           "description": "Enable chat textarea autocomplete"
         },
+        "kilo-code.new.autocomplete.fimFormat": {
+          "type": "string",
+          "enum": [
+            "suffix",
+            "inline"
+          ],
+          "default": "suffix",
+          "description": "FIM request format. 'suffix' sends OpenAI-compatible prompt and suffix fields. 'inline' embeds Qwen FIM markers in a single prompt for vLLM-style infill."
+        },
         "kilo-code.new.agentManager.autoBranchNaming": {
           "type": "boolean",
           "default": true,

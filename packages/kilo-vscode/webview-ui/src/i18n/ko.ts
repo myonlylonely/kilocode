@@ -1409,6 +1409,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "인라인 작업을 트리거하는 스마트 키바인딩 사용",
   "settings.autocomplete.chatAutocomplete.title": "채팅 텍스트 영역 자동완성 활성화",
   "settings.autocomplete.chatAutocomplete.description": "채팅 텍스트 영역에서 자동완성 제안 표시",
+  "settings.autocomplete.fimFormat.title": "FIM 요청 형식",
+  "settings.autocomplete.fimFormat.description":
+    "완료 요청을 보내는 방식입니다. Prompt + suffix는 OpenAI 호환 FIM 전송입니다. 인라인 FIM 마커는 Qwen Coder / vLLM 스타일 infill을 위해 prefix와 suffix를 하나의 prompt에 넣습니다.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "인라인 FIM 마커 (Qwen / vLLM)",
   "settings.autocomplete.modelsHint": "자동 완성에 사용되는 모델을 선택하려면 모델 설정을 참조하세요.",
   "settings.notifications.agent.title": "에이전트 완료",
   "settings.notifications.agent.description": "에이전트가 작업을 완료하면 알림 표시",

@@ -1404,6 +1404,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "ใช้ปุ่มลัดอัจฉริยะสำหรับงานอินไลน์",
   "settings.autocomplete.chatAutocomplete.title": "เปิดใช้งานเติมอัตโนมัติแชท",
   "settings.autocomplete.chatAutocomplete.description": "แสดงข้อเสนอแนะเติมอัตโนมัติในช่องแชท",
+  "settings.autocomplete.fimFormat.title": "รูปแบบคำขอ FIM",
+  "settings.autocomplete.fimFormat.description":
+    "วิธีส่งคำขอเติมข้อความ Prompt + suffix คือการส่ง FIM ที่เข้ากันได้กับ OpenAI มาร์กเกอร์ FIM แบบอินไลน์จะใส่ prefix และ suffix ในพรอมต์เดียวสำหรับ infill แบบ Qwen Coder / vLLM",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "มาร์กเกอร์ FIM แบบอินไลน์ (Qwen / vLLM)",
   "settings.autocomplete.modelsHint": "เลือกโมเดลที่ใช้สำหรับการเติมอัตโนมัติได้ที่การตั้งค่าโมเดล",
   "settings.notifications.agent.title": "เอเจนต์เสร็จสิ้น",
   "settings.notifications.agent.description": "แสดงการแจ้งเตือนเมื่อเอเจนต์ทำงานเสร็จ",

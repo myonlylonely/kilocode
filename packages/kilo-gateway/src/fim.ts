@@ -27,13 +27,50 @@ export function isLoopbackUrl(value: string) {
   return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "::1"
 }
 
+export type FimFormat = "suffix" | "inline"
+
+const FIM_INLINE_STOP = [
+  "<|endoftext|>",
+  "<|fim_prefix|>",
+  "<|fim_middle|>",
+  "<|fim_suffix|>",
+  "<|fim_pad|>",
+  "<|repo_name|>",
+  "<|file_sep|>",
+  "<|im_start|>",
+  "<|im_end|>",
+  "/src/",
+  "#- coding: utf-8",
+  "```",
+]
+
+function parseFimFormat(value: unknown): FimFormat {
+  return value === "inline" ? "inline" : "suffix"
+}
+
+function buildInlineFimPrompt(prefix: string, suffix: string) {
+  return `<|fim_prefix|>\n${prefix}<|fim_suffix|>${suffix}<|fim_middle|>`
+}
+
 export function buildOpenAICompletionsRequest(input: {
   model: string
   prefix: string
   suffix: string
   maxTokens: number
   temperature: number
+  format?: string
 }) {
+  if (parseFimFormat(input.format) === "inline") {
+    return {
+      model: input.model,
+      prompt: buildInlineFimPrompt(input.prefix, input.suffix),
+      max_tokens: input.maxTokens,
+      temperature: input.temperature,
+      stream: true,
+      stop: FIM_INLINE_STOP,
+      think: false,
+    }
+  }
   return {
     model: input.model,
     prompt: input.prefix,

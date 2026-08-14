@@ -7,6 +7,7 @@ import {
   openAICompletionsUrl,
   requestMistralFim,
   resolveFimTarget,
+  type FimFormat,
   type FimTarget,
 } from "../fim.js"
 import { buildKiloHeaders } from "../headers.js"
@@ -55,6 +56,7 @@ async function fetchFim(
     signal: AbortSignal
     organizationId?: string
     sessionId?: string
+    format?: FimFormat
     configured?: ConfiguredFimProvider
   },
 ): Promise<Response> {
@@ -83,6 +85,7 @@ async function fetchFim(
           suffix: input.suffix,
           maxTokens: input.maxTokens,
           temperature: input.temperature,
+          format: input.format,
         }),
       ),
     })
@@ -95,7 +98,7 @@ async function fetchFim(
 
 export function createFimHandler(Auth: Auth, resolveConfiguredProvider?: ResolveConfiguredFimProvider) {
   return async (c: any) => {
-    const { prefix, suffix, provider, model, maxTokens, temperature, sessionId } = c.req.valid("json")
+    const { prefix, suffix, provider, model, maxTokens, temperature, sessionId, format } = c.req.valid("json")
     const target = resolveFimTarget(provider, model)
     const fimMaxTokens = maxTokens ?? 256
     const fimTemperature = temperature ?? 0.2
@@ -137,6 +140,7 @@ export function createFimHandler(Auth: Auth, resolveConfiguredProvider?: Resolve
         signal,
         organizationId: proxy?.organizationId,
         sessionId,
+        format,
         configured,
       })
 

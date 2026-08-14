@@ -1448,6 +1448,11 @@ export const dict = {
     "Eine intelligente Tastenkombination zum Auslösen von Inline-Aufgaben verwenden",
   "settings.autocomplete.chatAutocomplete.title": "Chat-Textfeld-Autovervollständigung aktivieren",
   "settings.autocomplete.chatAutocomplete.description": "Autovervollständigungsvorschläge im Chat-Textfeld anzeigen",
+  "settings.autocomplete.fimFormat.title": "FIM-Anfrageformat",
+  "settings.autocomplete.fimFormat.description":
+    "Wie die Completion-Anfrage gesendet wird. Prompt + suffix ist der OpenAI-kompatible FIM-Transport. Inline-FIM-Marker setzen Prefix und Suffix in einen Prompt für Qwen-Coder-/vLLM-Infill.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Inline-FIM-Marker (Qwen / vLLM)",
   "settings.autocomplete.modelsHint":
     "Um zu wählen, welches Modell für die Autovervollständigung verwendet wird, siehe Modelleinstellungen.",
   "settings.notifications.agent.title": "Agent-Abschluss",

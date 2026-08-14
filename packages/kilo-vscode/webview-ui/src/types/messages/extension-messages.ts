@@ -412,6 +412,7 @@ export interface AutocompleteSettingsLoadedMessage {
     enableAutoTrigger: boolean
     enableSmartInlineTaskKeybinding: boolean
     enableChatAutocomplete: boolean
+    fimFormat: "suffix" | "inline"
     /** `null` means "no explicit setting — use the resolved default." */
     provider: string | null
     /** `null` means "no explicit setting — use the resolved default." */

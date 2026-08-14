@@ -1426,6 +1426,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "Использовать умную клавишу для запуска встроенных задач",
   "settings.autocomplete.chatAutocomplete.title": "Включить автодополнение чата",
   "settings.autocomplete.chatAutocomplete.description": "Показывать предложения автодополнения в поле чата",
+  "settings.autocomplete.fimFormat.title": "Формат FIM-запроса",
+  "settings.autocomplete.fimFormat.description":
+    "Как отправляется запрос автодополнения. Prompt + suffix — OpenAI-совместимый FIM-транспорт. Встроенные FIM-маркеры помещают prefix и suffix в один prompt для infill в стиле Qwen Coder / vLLM.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Встроенные FIM-маркеры (Qwen / vLLM)",
   "settings.autocomplete.modelsHint": "Чтобы выбрать модель для автодополнения, см. настройки Моделей.",
   "settings.notifications.agent.title": "Завершение агента",
   "settings.notifications.agent.description": "Показать уведомление при завершении задачи агентом",

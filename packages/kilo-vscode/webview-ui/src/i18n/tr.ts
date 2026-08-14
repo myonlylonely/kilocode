@@ -1412,6 +1412,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "Satır içi görevleri tetiklemek için akıllı tuş ataması kullan",
   "settings.autocomplete.chatAutocomplete.title": "Sohbet metin alanı otomatik tamamlamasını etkinleştir",
   "settings.autocomplete.chatAutocomplete.description": "Sohbet metin alanında otomatik tamamlama önerileri göster",
+  "settings.autocomplete.fimFormat.title": "FIM istek biçimi",
+  "settings.autocomplete.fimFormat.description":
+    "Tamamlama isteğinin nasıl gönderileceği. Prompt + suffix, OpenAI uyumlu FIM aktarımını kullanır. Satır içi FIM işaretleyicileri, Qwen Coder / vLLM tarzı infill için önek ve soneki tek bir prompta koyar.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Satır içi FIM işaretleyicileri (Qwen / vLLM)",
   "settings.autocomplete.modelsHint":
     "Otomatik tamamlama için kullanılacak modeli seçmek için Modeller ayarlarına bakın.",
 

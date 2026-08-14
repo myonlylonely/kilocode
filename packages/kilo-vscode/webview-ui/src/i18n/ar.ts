@@ -1395,6 +1395,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "استخدام اختصار ذكي لتشغيل المهام المضمّنة",
   "settings.autocomplete.chatAutocomplete.title": "تمكين الإكمال التلقائي للدردشة",
   "settings.autocomplete.chatAutocomplete.description": "عرض اقتراحات الإكمال التلقائي في مربع الدردشة",
+  "settings.autocomplete.fimFormat.title": "تنسيق طلب FIM",
+  "settings.autocomplete.fimFormat.description":
+    "كيفية إرسال طلب الإكمال. Prompt + suffix هو نقل FIM المتوافق مع OpenAI. علامات FIM المضمنة تضع البادئة واللاحقة في موجه واحد لأسلوب infill الخاص بـ Qwen Coder / vLLM.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "علامات FIM المضمنة (Qwen / vLLM)",
   "settings.autocomplete.modelsHint": "لاختيار النموذج المستخدم للإكمال التلقائي، راجع إعدادات النماذج.",
   "settings.notifications.agent.title": "إكمال الوكيل",
   "settings.notifications.agent.description": "إظهار إشعار عند إكمال الوكيل لمهمة",

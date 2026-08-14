@@ -1421,6 +1421,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "Brug en smart tastaturgenvej til at udløse inline-opgaver",
   "settings.autocomplete.chatAutocomplete.title": "Aktiver chat-autofuldførelse",
   "settings.autocomplete.chatAutocomplete.description": "Vis autofuldførelsesforslag i chatfeltet",
+  "settings.autocomplete.fimFormat.title": "FIM-anmodningsformat",
+  "settings.autocomplete.fimFormat.description":
+    "Hvordan fuldførelsesanmodningen sendes. Prompt + suffix er den OpenAI-kompatible FIM-transport. Inline FIM-markører lægger prefix og suffix i én prompt til Qwen Coder / vLLM-stil infill.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Inline FIM-markører (Qwen / vLLM)",
   "settings.autocomplete.modelsHint":
     "For at vælge hvilken model der bruges til autofuldførelse, se Modelindstillinger.",
   "settings.notifications.agent.title": "Agentafslutning",

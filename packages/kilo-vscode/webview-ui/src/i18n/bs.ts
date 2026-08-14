@@ -1427,6 +1427,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "Koristi pametnu prečicu za pokretanje inline zadataka",
   "settings.autocomplete.chatAutocomplete.title": "Omogući automatsko dovršavanje chata",
   "settings.autocomplete.chatAutocomplete.description": "Prikaži prijedloge automatskog dovršavanja u polju chata",
+  "settings.autocomplete.fimFormat.title": "Format FIM zahtjeva",
+  "settings.autocomplete.fimFormat.description":
+    "Kako se šalje zahtjev za dovršavanje. Prompt + suffix je FIM transport kompatibilan s OpenAI. Ugrađeni FIM markeri stavljaju prefiks i sufiks u jedan prompt za infill u stilu Qwen Coder / vLLM.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Ugrađeni FIM markeri (Qwen / vLLM)",
   "settings.autocomplete.modelsHint":
     "Da odaberete koji se model koristi za automatsko dovršavanje, pogledajte postavke Modela.",
   "settings.notifications.agent.title": "Završetak agenta",

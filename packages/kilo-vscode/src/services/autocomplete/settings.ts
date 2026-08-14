@@ -7,6 +7,10 @@ type Message = {
 
 type Post = (msg: unknown) => void
 
+function parseFimFormat(value: unknown) {
+  return value === "inline" ? "inline" : "suffix"
+}
+
 export async function routeAutocompleteMessage(message: Message, post: Post): Promise<boolean> {
   if (message.type === "requestAutocompleteSettings") {
     post(buildAutocompleteSettingsMessage())
@@ -14,6 +18,10 @@ export async function routeAutocompleteMessage(message: Message, post: Post): Pr
   }
 
   return false
+}
+
+export function getFimFormat() {
+  return parseFimFormat(vscode.workspace.getConfiguration("kilo-code.new.autocomplete").get("fimFormat"))
 }
 
 export function buildAutocompleteSettingsMessage() {
@@ -27,6 +35,7 @@ export function buildAutocompleteSettingsMessage() {
       enableAutoTrigger: config.get<boolean>("enableAutoTrigger", true),
       enableSmartInlineTaskKeybinding: config.get<boolean>("enableSmartInlineTaskKeybinding", false),
       enableChatAutocomplete: config.get<boolean>("enableChatAutocomplete", false),
+      fimFormat: getFimFormat(),
       provider: config.get<string>("provider") ?? null,
       model: config.get<string>("model") ?? null,
     },
@@ -57,6 +66,7 @@ export function validAutocompleteSetting(key: string, value: unknown) {
   if (key === "enableAutoTrigger") return typeof value === "boolean"
   if (key === "enableSmartInlineTaskKeybinding") return typeof value === "boolean"
   if (key === "enableChatAutocomplete") return typeof value === "boolean"
+  if (key === "fimFormat") return value === "suffix" || value === "inline"
 
   return false
 }

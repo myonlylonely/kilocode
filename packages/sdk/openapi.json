@@ -13449,6 +13449,10 @@
                   },
                   "sessionId": {
                     "type": "string"
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": ["suffix", "inline"]
                   }
                 },
                 "required": ["prefix", "suffix"],

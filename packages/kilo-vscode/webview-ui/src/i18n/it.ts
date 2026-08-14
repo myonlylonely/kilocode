@@ -1217,6 +1217,11 @@ export const dict = {
   "settings.autocomplete.chatAutocomplete.title": "Abilita autocompletamento textarea chat",
   "settings.autocomplete.chatAutocomplete.description":
     "Mostra suggerimenti di autocompletamento nella textarea della chat",
+  "settings.autocomplete.fimFormat.title": "Formato richiesta FIM",
+  "settings.autocomplete.fimFormat.description":
+    "Come viene inviata la richiesta di completamento. Prompt + suffix è il trasporto FIM compatibile con OpenAI. I marcatori FIM in linea inseriscono prefisso e suffisso in un unico prompt per l'infill in stile Qwen Coder / vLLM.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Marcatori FIM in linea (Qwen / vLLM)",
   "settings.notifications.agent.title": "Completamento agente",
   "settings.notifications.agent.description": "Mostra una notifica quando l'agente completa un task",
   "settings.notifications.permissions.title": "Richieste autorizzazione",

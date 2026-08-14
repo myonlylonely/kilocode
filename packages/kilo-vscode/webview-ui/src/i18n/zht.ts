@@ -1338,6 +1338,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "使用智慧快捷鍵觸發內嵌任務",
   "settings.autocomplete.chatAutocomplete.title": "啟用聊天文字方塊自動補全",
   "settings.autocomplete.chatAutocomplete.description": "在聊天文字方塊中顯示自動補全建議",
+  "settings.autocomplete.fimFormat.title": "FIM 請求格式",
+  "settings.autocomplete.fimFormat.description":
+    "傳送給模型的補全請求格式。Prompt + suffix 適用於 OpenAI 相容的 FIM 服務。內聯 FIM 標記將前後文寫入同一 prompt，適用於 Qwen Coder / vLLM 風格的 infill。",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix（OpenAI）",
+  "settings.autocomplete.fimFormat.inline": "內聯 FIM 標記（Qwen / vLLM）",
   "settings.autocomplete.modelsHint": "若要選擇用於自動補全的模型，請參閱模型設定。",
   "settings.notifications.agent.title": "Agent 完成",
   "settings.notifications.agent.description": "Agent 完成任務時顯示通知",

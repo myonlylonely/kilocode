@@ -67,6 +67,40 @@ describe("OpenAI-compatible FIM transport", () => {
     })
   })
 
+  test("embeds Qwen FIM markers in a single prompt when format is inline", () => {
+    expect(
+      buildOpenAICompletionsRequest({
+        model: "hosted_vllm/Qwen2.5-Coder-7B-Instruct-AWQ",
+        prefix: "// test.js\nfunction add(a, b) {\n    return ",
+        suffix: "\n}",
+        maxTokens: 64,
+        temperature: 0.01,
+        format: "inline",
+      }),
+    ).toEqual({
+      model: "hosted_vllm/Qwen2.5-Coder-7B-Instruct-AWQ",
+      prompt: "<|fim_prefix|>\n// test.js\nfunction add(a, b) {\n    return <|fim_suffix|>\n}<|fim_middle|>",
+      max_tokens: 64,
+      temperature: 0.01,
+      stream: true,
+      stop: [
+        "<|endoftext|>",
+        "<|fim_prefix|>",
+        "<|fim_middle|>",
+        "<|fim_suffix|>",
+        "<|fim_pad|>",
+        "<|repo_name|>",
+        "<|file_sep|>",
+        "<|im_start|>",
+        "<|im_end|>",
+        "/src/",
+        "#- coding: utf-8",
+        "```",
+      ],
+      think: false,
+    })
+  })
+
   test("joins the completions endpoint and recognizes loopback servers", () => {
     expect(openAICompletionsUrl("http://127.0.0.1:1234/v1/")).toBe("http://127.0.0.1:1234/v1/completions")
     expect(openAICompletionsUrl("https://inference.example/v1")).toBe("https://inference.example/v1/completions")

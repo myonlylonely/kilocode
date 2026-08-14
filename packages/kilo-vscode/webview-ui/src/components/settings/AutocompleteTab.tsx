@@ -1,9 +1,15 @@
 import { Component } from "solid-js"
 import { Switch } from "@kilocode/kilo-ui/switch"
+import { Select } from "@kilocode/kilo-ui/select"
 import { Card } from "@kilocode/kilo-ui/card"
 import { useConfig } from "../../context/config"
 import { useLanguage } from "../../context/language"
 import SettingsRow from "./SettingsRow"
+
+const FIM_FORMATS = [
+  { value: "suffix", labelKey: "settings.autocomplete.fimFormat.suffix" },
+  { value: "inline", labelKey: "settings.autocomplete.fimFormat.inline" },
+] as const
 
 const AutocompleteTab: Component<{ onNavigateToModels?: () => void }> = (props) => {
   const { settings, updateSetting } = useConfig()
@@ -17,6 +23,8 @@ const AutocompleteTab: Component<{ onNavigateToModels?: () => void }> = (props) 
   ) => {
     updateSetting(`autocomplete.${key}`, value)
   }
+
+  const format = () => (settings()["autocomplete.fimFormat"] === "inline" ? "inline" : "suffix")
 
   return (
     <div data-component="autocomplete-settings">
@@ -50,7 +58,6 @@ const AutocompleteTab: Component<{ onNavigateToModels?: () => void }> = (props) 
         <SettingsRow
           title={language.t("settings.autocomplete.chatAutocomplete.title")}
           description={language.t("settings.autocomplete.chatAutocomplete.description")}
-          last
         >
           <Switch
             checked={enabled("autocomplete.enableChatAutocomplete", false)}
@@ -59,6 +66,26 @@ const AutocompleteTab: Component<{ onNavigateToModels?: () => void }> = (props) 
           >
             {language.t("settings.autocomplete.chatAutocomplete.title")}
           </Switch>
+        </SettingsRow>
+
+        <SettingsRow
+          title={language.t("settings.autocomplete.fimFormat.title")}
+          description={language.t("settings.autocomplete.fimFormat.description")}
+          last
+        >
+          <Select
+            options={[...FIM_FORMATS]}
+            current={FIM_FORMATS.find((item) => item.value === format())}
+            value={(item) => item.value}
+            label={(item) => language.t(item.labelKey)}
+            onSelect={(item) => {
+              if (!item) return
+              updateSetting("autocomplete.fimFormat", item.value)
+            }}
+            variant="secondary"
+            size="small"
+            triggerVariant="settings"
+          />
         </SettingsRow>
       </Card>
       <p

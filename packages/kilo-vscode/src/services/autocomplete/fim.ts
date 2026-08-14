@@ -24,6 +24,7 @@ export async function generateFim(
   onChunk: (text: string) => void,
   signal?: AbortSignal,
   scope?: string,
+  format?: "suffix" | "inline",
 ): Promise<ResponseMetaData> {
   const client = await connectionService.getClientAsync()
   const info = getAutocompleteModelById(modelId)
@@ -47,6 +48,7 @@ export async function generateFim(
       maxTokens: info.maxTokens ?? FIM_MAX_TOKENS,
       temperature: info.temperature,
       sessionId: info.configuredProvider ? getFimSessionId(info.id, scope) : undefined,
+      format: format === "inline" ? "inline" : undefined,
     },
     {
       signal,

@@ -95,4 +95,12 @@ describe("autocomplete settings", () => {
 
     expect(validAutocompleteSetting("enableAutoTrigger", "true")).toBe(false)
   })
+
+  it("accepts suffix and inline FIM formats", async () => {
+    const { validAutocompleteSetting } = await import("../settings")
+
+    expect(validAutocompleteSetting("fimFormat", "suffix")).toBe(true)
+    expect(validAutocompleteSetting("fimFormat", "inline")).toBe(true)
+    expect(validAutocompleteSetting("fimFormat", "chat")).toBe(false)
+  })
 })

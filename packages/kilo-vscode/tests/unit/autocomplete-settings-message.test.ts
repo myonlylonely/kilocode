@@ -39,6 +39,7 @@ describe("buildAutocompleteSettingsMessage", () => {
 
     expect(msg.settings.provider).toBeNull()
     expect(msg.settings.model).toBeNull()
+    expect(msg.settings.fimFormat).toBe("suffix")
   })
 
   it("passes an explicit BYOK selection through verbatim", () => {
@@ -81,5 +82,11 @@ describe("validAutocompleteSetting", () => {
 
   it("rejects non-boolean toggle updates", () => {
     expect(validAutocompleteSetting("enableAutoTrigger", "true")).toBe(false)
+  })
+
+  it("accepts suffix and inline FIM formats", () => {
+    expect(validAutocompleteSetting("fimFormat", "suffix")).toBe(true)
+    expect(validAutocompleteSetting("fimFormat", "inline")).toBe(true)
+    expect(validAutocompleteSetting("fimFormat", "chat")).toBe(false)
   })
 })

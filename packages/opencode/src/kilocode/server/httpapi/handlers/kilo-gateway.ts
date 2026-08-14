@@ -210,6 +210,7 @@ export const kiloGatewayHandlers = HttpApiBuilder.group(InstanceHttpApi, "kilo",
                   suffix: ctx.payload.suffix,
                   maxTokens: ctx.payload.maxTokens ?? 256,
                   temperature: ctx.payload.temperature ?? 0.2,
+                  format: ctx.payload.format,
                 }),
               ),
             })

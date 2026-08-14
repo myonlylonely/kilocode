@@ -11983,6 +11983,7 @@ export type KiloFimData = {
     maxTokens?: number
     temperature?: number
     sessionId?: string
+    format?: "suffix" | "inline"
   }
   path?: never
   query?: {

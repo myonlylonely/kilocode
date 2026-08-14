@@ -1429,6 +1429,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "Usar um atalho inteligente para acionar tarefas inline",
   "settings.autocomplete.chatAutocomplete.title": "Ativar autocompletar do chat",
   "settings.autocomplete.chatAutocomplete.description": "Mostrar sugestões de autocompletar no campo de chat",
+  "settings.autocomplete.fimFormat.title": "Formato de solicitação FIM",
+  "settings.autocomplete.fimFormat.description":
+    "Como a solicitação de conclusão é enviada. Prompt + suffix é o transporte FIM compatível com OpenAI. Marcadores FIM em linha colocam prefixo e sufixo em um único prompt para infill no estilo Qwen Coder / vLLM.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Marcadores FIM em linha (Qwen / vLLM)",
   "settings.autocomplete.modelsHint":
     "Para escolher qual modelo é usado para autocompletar, veja as configurações de Modelos.",
   "settings.notifications.agent.title": "Conclusão do agente",

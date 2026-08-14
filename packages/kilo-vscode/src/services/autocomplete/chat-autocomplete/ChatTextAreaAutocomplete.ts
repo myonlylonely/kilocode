@@ -7,6 +7,7 @@ import { VisibleCodeTracker } from "../context/VisibleCodeTracker"
 import { FileIgnoreController } from "../shims/FileIgnoreController"
 import type { KiloConnectionService } from "../../cli-backend"
 import { generateFim, hasValidCredentials } from "../fim"
+import { getFimFormat } from "../settings"
 import { getAutocompleteModel, getAutocompleteModelById } from "../../../shared/autocomplete-models"
 import { finalizeChatSuggestion, buildChatPrefix } from "./chat-autocomplete-utils"
 
@@ -117,6 +118,7 @@ export class ChatTextAreaAutocomplete {
         },
         undefined,
         `${vscode.env.machineId}\0${this.dir || "chat-textarea"}`,
+        getFimFormat(),
       )
 
       const latencyMs = Date.now() - startTime

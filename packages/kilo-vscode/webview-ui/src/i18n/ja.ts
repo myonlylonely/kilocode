@@ -1417,6 +1417,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "インラインタスクをトリガーするスマートキーバインドを使用",
   "settings.autocomplete.chatAutocomplete.title": "チャットの自動補完を有効にする",
   "settings.autocomplete.chatAutocomplete.description": "チャットテキストエリアに自動補完の提案を表示",
+  "settings.autocomplete.fimFormat.title": "FIM リクエスト形式",
+  "settings.autocomplete.fimFormat.description":
+    "補完リクエストの送信方法です。Prompt + suffix は OpenAI 互換の FIM 転送です。インライン FIM マーカーは、Qwen Coder / vLLM スタイルの infill 用に prefix と suffix を 1 つの prompt に入れます。",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix（OpenAI）",
+  "settings.autocomplete.fimFormat.inline": "インライン FIM マーカー（Qwen / vLLM）",
   "settings.autocomplete.modelsHint": "オートコンプリートに使用するモデルを選択するには、モデル設定をご覧ください。",
   "settings.notifications.agent.title": "エージェント完了",
   "settings.notifications.agent.description": "エージェントがタスクを完了したら通知を表示",

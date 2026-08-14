@@ -157,19 +157,21 @@ describe("ModelsDev Service", () => {
     Effect.gen(function* () {
       yield* writeCacheText("{")
       const state = yield* Ref.make({ ...initialState, body: JSON.stringify(fixture2) })
-      const result = yield* Effect.acquireUseRelease(
-        Effect.sync(() => {
-          Flag.KILO_DISABLE_MODELS_FETCH = false
-        }),
-        () =>
-          provided(
-            state,
-            ModelsDev.Service.use((s) => s.get()),
-          ),
-        () =>
+      // Flip the fetch flag only after the layer is built. ModelsDev forks an
+      // eager refresh when the flag is false at construction, which races get()
+      // on the same cache file and can make this test see extra HTTP calls.
+      const result = yield* provided(
+        state,
+        Effect.acquireUseRelease(
           Effect.sync(() => {
-            Flag.KILO_DISABLE_MODELS_FETCH = true
+            Flag.KILO_DISABLE_MODELS_FETCH = false
           }),
+          () => ModelsDev.Service.use((s) => s.get()),
+          () =>
+            Effect.sync(() => {
+              Flag.KILO_DISABLE_MODELS_FETCH = true
+            }),
+        ),
       )
       expect(result).toEqual(fixture2)
       expect(yield* Effect.promise(() => readFile(cacheFile, "utf8"))).toBe(JSON.stringify(fixture2))

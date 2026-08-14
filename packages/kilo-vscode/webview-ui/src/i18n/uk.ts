@@ -1411,6 +1411,11 @@ export const dict = {
     "Використовувати розумне прив'язування клавіш для активації підказок",
   "settings.autocomplete.chatAutocomplete.title": "Увімкнути автодоповнення в полі чату",
   "settings.autocomplete.chatAutocomplete.description": "Показувати підказки автодоповнення в полі введення чату",
+  "settings.autocomplete.fimFormat.title": "Формат FIM-запиту",
+  "settings.autocomplete.fimFormat.description":
+    "Як надсилається запит автодоповнення. Prompt + suffix — OpenAI-сумісний FIM-транспорт. Вбудовані FIM-маркери поміщають prefix і suffix в один prompt для infill у стилі Qwen Coder / vLLM.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Вбудовані FIM-маркери (Qwen / vLLM)",
   "settings.autocomplete.modelsHint": "Щоб вибрати модель для автодоповнення, див. Налаштування моделей.",
 
   "settings.notifications.agent.title": "Завершення агента",

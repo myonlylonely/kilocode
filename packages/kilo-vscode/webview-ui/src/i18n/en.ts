@@ -1402,6 +1402,11 @@ export const dict = {
   "settings.autocomplete.smartKeybinding.description": "Use a smart keybinding for triggering inline tasks",
   "settings.autocomplete.chatAutocomplete.title": "Enable chat textarea autocomplete",
   "settings.autocomplete.chatAutocomplete.description": "Show autocomplete suggestions in the chat textarea",
+  "settings.autocomplete.fimFormat.title": "FIM request format",
+  "settings.autocomplete.fimFormat.description":
+    "How the completion request is sent. Prompt + suffix is the OpenAI-compatible FIM transport. Inline FIM markers put prefix and suffix into one prompt for Qwen Coder / vLLM-style infill.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Inline FIM markers (Qwen / vLLM)",
   "settings.autocomplete.modelsHint": "To choose which model is used for autocompletions, see the Models settings.",
 
   "settings.notifications.agent.title": "Agent Completion",

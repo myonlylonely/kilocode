@@ -9,10 +9,16 @@ import {
 import { getProcessedSnippets } from "./getProcessedSnippets"
 import { getTemplateForModel } from "../continuedev/core/autocomplete/templating/AutocompleteTemplate"
 import { generateFim } from "../fim"
+import { getFimFormat } from "../settings"
 import type { KiloConnectionService } from "../../cli-backend"
 import { getAutocompleteModelById } from "../../../shared/autocomplete-models"
 
 export type { FimAutocompletePrompt, FimCompletionResult }
+
+function fileHead(filepath: string, comment: string) {
+  const name = filepath.replace(/\\/g, "/").split("/").pop() || "file"
+  return `${comment} ${name}\n`
+}
 
 export class FimPromptBuilder {
   constructor(private contextProvider: AutocompleteContextProvider) {}
@@ -36,19 +42,24 @@ export class FimPromptBuilder {
 
     const template = getTemplateForModel(modelName)
     const configuredProvider = getAutocompleteModelById(modelName).configuredProvider === true
-
-    let formattedPrefix = prunedPrefixRaw
-    if (!configuredProvider && template.compilePrefixSuffix && prunedSuffix) {
-      const [compiledPrefix] = template.compilePrefixSuffix(
-        prunedPrefixRaw,
-        prunedSuffix,
-        filepathUri,
-        "", // reponame not used in our context
-        snippetsWithUris,
-        workspaceDirs,
-      )
-      formattedPrefix = compiledPrefix
-    }
+    const formattedPrefix = (() => {
+      if (getFimFormat() === "inline") {
+        const mark = helper.lang.singleLineComment ?? "//"
+        return `${fileHead(filepathUri, mark)}${prunedPrefixRaw}`
+      }
+      if (!configuredProvider && template.compilePrefixSuffix && prunedSuffix) {
+        const [compiled] = template.compilePrefixSuffix(
+          prunedPrefixRaw,
+          prunedSuffix,
+          filepathUri,
+          "", // reponame not used in our context
+          snippetsWithUris,
+          workspaceDirs,
+        )
+        return compiled
+      }
+      return prunedPrefixRaw
+    })()
 
     return {
       formattedPrefix,
@@ -80,6 +91,7 @@ export class FimPromptBuilder {
       onChunk,
       signal,
       `${vscode.env.machineId}\0${autocompleteInput.filepath}`,
+      getFimFormat(),
     )
 
     const fillInAtCursorSuggestion = processSuggestion(response)

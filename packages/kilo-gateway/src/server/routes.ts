@@ -352,6 +352,7 @@ export function createKiloRoutes(deps: KiloRoutesDeps) {
           maxTokens: z.number().optional(),
           temperature: z.number().optional(),
           sessionId: z.string().optional(),
+          format: z.enum(["suffix", "inline"]).optional(),
         }),
       ),
       createFimHandler(Auth, resolveConfiguredFimProvider),

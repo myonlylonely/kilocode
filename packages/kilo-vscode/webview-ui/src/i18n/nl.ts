@@ -1421,6 +1421,11 @@ export const dict = {
   "settings.autocomplete.chatAutocomplete.title": "Chat tekstveld automatisch aanvullen inschakelen",
   "settings.autocomplete.chatAutocomplete.description":
     "Toon suggesties voor automatisch aanvullen in het chat tekstveld",
+  "settings.autocomplete.fimFormat.title": "FIM-aanvraagformaat",
+  "settings.autocomplete.fimFormat.description":
+    "Hoe het completion-verzoek wordt verzonden. Prompt + suffix is het OpenAI-compatibele FIM-transport. Inline FIM-markers zetten prefix en suffix in één prompt voor Qwen Coder / vLLM-stijl infill.",
+  "settings.autocomplete.fimFormat.suffix": "Prompt + suffix (OpenAI)",
+  "settings.autocomplete.fimFormat.inline": "Inline FIM-markers (Qwen / vLLM)",
   "settings.autocomplete.modelsHint":
     "Om te kiezen welk model wordt gebruikt voor automatisch aanvullen, zie de Modellen-instellingen.",
 
