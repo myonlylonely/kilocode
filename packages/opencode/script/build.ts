@@ -24,6 +24,7 @@ import { stageBubblewrap } from "./kilocode/bubblewrap"
 import { LanceDBRuntime } from "../src/kilocode/lancedb"
 import { KiloSandboxWorker } from "./kilocode/kilo-sandbox-worker"
 import { KiloSandboxNetwork } from "./kilocode/kilo-sandbox-network"
+import { upload } from "../../../script/kilocode/release-assets"
 // kilocode_change end
 
 const singleFlag = process.argv.includes("--single")
@@ -469,7 +470,13 @@ if (Script.release) {
       // kilocode_change end
     }
   }
-  await $`gh release upload v${Script.version} ${archives} --clobber` // kilocode_change
+  // kilocode_change start - delete existing draft assets by release id, then upload one file at a time
+  await upload(archives, {
+    version: Script.version,
+    repo: process.env.GH_REPO,
+    id: process.env.KILO_RELEASE,
+  })
+  // kilocode_change end
 }
 
 export { binaries }

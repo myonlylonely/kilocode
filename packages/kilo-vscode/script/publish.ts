@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { $ } from "bun"
 import { join } from "node:path"
 import { existsSync } from "node:fs"
 import { Script } from "@opencode-ai/script"
+import { upload } from "../../../script/kilocode/release-assets"
 
 const prerelease = process.env.KILO_PRE_RELEASE === "true"
 
@@ -43,7 +43,10 @@ if (!Script.release) {
   process.exit(0)
 }
 
-const repo = process.env.GH_REPO ? ["--repo", process.env.GH_REPO] : []
 console.log(`\n📤 Uploading VSIX files to GitHub release v${Script.version}...`)
-await $`gh release upload v${Script.version} ${vsixFiles} --clobber ${repo}`
+await upload(vsixFiles, {
+  version: Script.version,
+  repo: process.env.GH_REPO,
+  id: process.env.KILO_RELEASE,
+})
 console.log(`  ✅ Uploaded all VSIX files to GitHub release`)

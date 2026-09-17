@@ -1,23 +1,17 @@
 #!/usr/bin/env bun
 
 import { Script } from "@opencode-ai/script"
-import { $ } from "bun"
+import { ensure } from "./kilocode/release-assets"
 
 const output = [`version=${Script.version}`]
 
-if (!Script.preview) {
-  // kilocode_change start - create draft release; changelog generation and
-  // release notes are handled by publish.ts on the same runner that commits.
-  await $`gh release create v${Script.version} -d --title "v${Script.version}" --notes ""`
-  // kilocode_change end
-  const release = await $`gh release view v${Script.version} --json tagName,databaseId`.json()
-  output.push(`release=${release.databaseId}`)
-  output.push(`tag=${release.tagName}`)
-  // kilocode_change start - handle both beta and rc preview channels
-} else if (Script.channel === "beta" || Script.channel === "rc") {
-  await $`gh release create v${Script.version} -d --prerelease --title "v${Script.version}" --repo ${process.env.GH_REPO}`
-  const release =
-    await $`gh release view v${Script.version} --json tagName,databaseId --repo ${process.env.GH_REPO}`.json()
+if (!Script.preview || Script.channel === "beta" || Script.channel === "rc") {
+  // kilocode_change start - reuse an existing draft when re-running the same version
+  const release = await ensure({
+    version: Script.version,
+    repo: process.env.GH_REPO,
+    prerelease: Script.preview,
+  })
   output.push(`release=${release.databaseId}`)
   output.push(`tag=${release.tagName}`)
   // kilocode_change end
