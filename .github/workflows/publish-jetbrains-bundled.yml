@@ -116,17 +116,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Install build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y patchelf zip unzip
-          curl --fail --location \
-            https://ziglang.org/download/0.14.0/zig-linux-x86_64-0.14.0.tar.xz \
-            --output "$RUNNER_TEMP/zig.tar.xz"
-          echo "473ec26806133cf4d1918caf1a410f8403a13d979726a9045b421b685031a982  $RUNNER_TEMP/zig.tar.xz" | sha256sum --check --status
-          tar -xJf "$RUNNER_TEMP/zig.tar.xz" -C "$RUNNER_TEMP"
-          echo "$RUNNER_TEMP/zig-linux-x86_64-0.14.0" >> "$GITHUB_PATH"
-
       - name: Validate signing secrets
         run: |
           missing=0
@@ -142,22 +131,42 @@ jobs:
           JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
 
+      - name: Write signing secrets to temp files
+        run: |
+          dir="$RUNNER_TEMP/jetbrains-signing"
+          mkdir -m 700 -p "$dir"
+          chain="$dir/certificate-chain.pem"
+          key="$dir/private-key.pem"
+          umask 077
+          printf '%s' "$JETBRAINS_CERTIFICATE_CHAIN" > "$chain"
+          printf '%s' "$JETBRAINS_PRIVATE_KEY" > "$key"
+          chmod 600 "$chain" "$key"
+          echo "JETBRAINS_CERTIFICATE_CHAIN_FILE=$chain" >> "$GITHUB_ENV"
+          echo "JETBRAINS_PRIVATE_KEY_FILE=$key" >> "$GITHUB_ENV"
+        env:
+          JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+
       - name: Build signed bundled plugin
         working-directory: packages/kilo-jetbrains
         run: |
-          ./gradlew clean buildPlugin signPlugin verifyPluginSignature verifyPlugin \
-            -Pproduction=true \
-            -Pkilo.version="$VERSION" \
-            -Pkilo.channel="$CHANNEL" \
+          args=(
+            -Pproduction=true
+            -Pkilo.version="$VERSION"
+            -Pkilo.channel="$CHANNEL"
             -Pkilo.cli.bundled=true
+          )
+          ./gradlew clean buildPlugin signPlugin verifyPluginSignature verifyPlugin "${args[@]}"
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.validate.outputs.version }}
           CHANNEL: ${{ needs.validate.outputs.channel }}
-          JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
-          JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+
+      - name: Remove signing secret temp files
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/jetbrains-signing"
 
       - name: Resolve bundled archive
         id: archive

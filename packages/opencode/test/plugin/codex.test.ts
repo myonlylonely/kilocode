@@ -4,6 +4,7 @@ import {
   parseJwtClaims,
   extractAccountIdFromClaims,
   extractAccountId,
+  renderOAuthError,
   type IdTokenClaims,
 } from "../../src/plugin/openai/codex"
 
@@ -14,6 +15,14 @@ function createTestJwt(payload: object): string {
 }
 
 describe("plugin.codex", () => {
+  test("escapes provider errors in callback HTML", () => {
+    const error = `</div><script>alert("xss" & 'more')</script>`
+    const html = renderOAuthError(error)
+
+    expect(html).toContain("&lt;/div&gt;&lt;script&gt;alert(&quot;xss&quot; &amp; &#39;more&#39;)&lt;/script&gt;")
+    expect(html).not.toContain(error)
+  })
+
   describe("parseJwtClaims", () => {
     test("parses valid JWT with claims", () => {
       const payload = { email: "test@example.com", chatgpt_account_id: "acc-123" }
@@ -139,6 +148,14 @@ describe("plugin.codex", () => {
             id: "gpt-5.5",
             api: { id: "gpt-5.5" },
           } as never,
+          "gpt-5.6": {
+            id: "gpt-5.6",
+            api: { id: "gpt-5.6" },
+          } as never,
+          "gpt-5.6-sol": {
+            id: "gpt-5.6-sol",
+            api: { id: "gpt-5.6-sol" },
+          } as never,
           "gpt-5.4-mini": {
             id: "gpt-5.4-mini",
             api: { id: "gpt-5.4-mini" },
@@ -155,6 +172,8 @@ describe("plugin.codex", () => {
       } as never, { auth: { type: "oauth" } } as never)
       expect(provider).not.toHaveProperty(["gpt-5.5-pro"])
       expect(provider).toHaveProperty(["gpt-5.5"])
+      expect(provider).not.toHaveProperty(["gpt-5.6"])
+      expect(provider).toHaveProperty(["gpt-5.6-sol"])
       expect(provider).toHaveProperty(["gpt-5.4-mini"])
       expect(provider).toHaveProperty(["gpt-5.1-codex"])
       expect(provider).not.toHaveProperty(["other-model"])
@@ -201,6 +220,88 @@ describe("plugin.codex", () => {
     expect(enabledOptions.fetch).toBeFunction()
     await enabled.dispose?.()
   })
+
+  test("filters unsupported modes and uses Codex context limits for OAuth GPT models", async () => {
+    const hooks = await CodexAuthPlugin({} as never)
+    const limit = { context: 1_050_000, input: 922_000, output: 128_000 }
+    const provider = {
+      models: {
+        ...Object.fromEntries(
+          ["gpt-5.4", "gpt-5.5", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.7-pro"].map((id) => [
+            id,
+            { id, api: { id }, limit, cost: {}, options: {} },
+          ]),
+        ),
+        "gpt-5.4-pro": {
+          id: "gpt-5.4-pro",
+          api: { id: "gpt-5.4" },
+          limit,
+          cost: {},
+          options: { reasoningMode: "pro" },
+        },
+        "gpt-5.6-sol-high": {
+          id: "gpt-5.6-sol-high",
+          api: { id: "gpt-5.6-sol" },
+          limit,
+          cost: {},
+          options: { reasoningEffort: "high" },
+        },
+      },
+    }
+
+    const models = await hooks.provider!.models!(provider as never, { auth: { type: "oauth" } } as never)
+
+    expect(models["gpt-5.4"]?.limit).toEqual(limit)
+    expect(models["gpt-5.5"]?.limit).toEqual({ context: 400_000, input: 272_000, output: 128_000 })
+    // kilocode_change start - GPT-5.6 OAuth models use the current Codex limits
+    expect(models["gpt-5.6-sol"]?.limit).toEqual(limit)
+    expect(models["gpt-5.6-terra"]?.limit).toEqual(limit)
+    expect(models["gpt-5.6-luna"]?.limit).toEqual(limit)
+    // kilocode_change end
+    expect(models["gpt-5.4-pro"]).toBeUndefined()
+    expect(models["gpt-5.7-pro"]).toBeDefined()
+    expect(models["gpt-5.6-sol-high"]).toBeDefined()
+    expect(await hooks.provider!.models!(provider as never, { auth: { type: "api" } } as never)).toBe(
+      provider.models as never,
+    )
+  })
+
+  // kilocode_change start - cover integer GPT major versions until the next upstream sync
+  test.each([
+    ["gpt-6-astra", true],
+    ["gpt-6", true],
+    ["gpt-6.0-astra", true],
+    ["gpt-7", true],
+    ["gpt-10", true],
+    ["gpt-5.5-astra", true],
+    ["gpt-5.9", true],
+    ["gpt-5.10", true],
+    ["gpt-5.10-astra", true],
+    ["gpt-5.40", true],
+    ["gpt-5", false],
+    ["gpt-5.4-astra", false],
+    ["gpt-5.04-astra", false],
+    ["gpt-4.1", false],
+    ["gpt-4.99", false],
+    ["gpt-5.5-pro", false],
+    ["gpt-5.6", false],
+    ["gpt-6garbage", true],
+    ["gpt-6.", true],
+    ["gpt-6.1.2", true],
+    ["not-a-gpt-model", false],
+  ])("filters OAuth model %s by GPT major and minor versions", async (id, allowed) => {
+    const hooks = await CodexAuthPlugin({} as never)
+    const provider = {
+      models: {
+        [id]: { id, api: { id }, limit: {}, cost: {}, options: {} },
+      },
+    }
+
+    const models = await hooks.provider!.models!(provider as never, { auth: { type: "oauth" } } as never)
+
+    expect(Object.keys(models)).toEqual(allowed ? [id] : [])
+  })
+  // kilocode_change end
 
   test("deduplicates concurrent Codex token refreshes", async () => {
     let auth = {

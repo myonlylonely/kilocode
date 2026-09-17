@@ -91,6 +91,32 @@ class KiloBackendChatManagerTest {
     }
 
     @Test
+    fun `delete message sends queued message delete request`() = runBlocking {
+        val port = mock.start()
+        val chat = KiloBackendChatManager(scope, TestLog())
+        chat.start(OkHttpClient(), port, MutableSharedFlow())
+
+        val result = chat.deleteMessage("ses_abc", "/test/project", "msg1")
+
+        assertTrue(result)
+        assertEquals(1, mock.requestCount("/session/ses_abc/message/msg1"))
+        assertTrue(mock.lastMessageDeletePath!!.startsWith("/session/ses_abc/message/msg1?directory="))
+    }
+
+    @Test
+    fun `delete message returns false for queued drop miss`() = runBlocking {
+        val port = mock.start()
+        val chat = KiloBackendChatManager(scope, TestLog())
+        chat.start(OkHttpClient(), port, MutableSharedFlow())
+        mock.messageDeleteResponse = "false"
+
+        val result = chat.deleteMessage("ses_abc", "/test/project", "msg1")
+
+        assertEquals(false, result)
+        assertEquals(1, mock.requestCount("/session/ses_abc/message/msg1"))
+    }
+
+    @Test
     fun `revert failure throws on non successful response`() = runBlocking {
         val port = mock.start()
         val chat = KiloBackendChatManager(scope, TestLog())
@@ -201,5 +227,46 @@ class KiloBackendChatManagerTest {
         assertTrue(event is ChatEventDto.TurnOpen)
         assertEquals("ses_abc", event.sessionID)
         assertTrue(log.messages.any { it.contains("route=chat-events parse=false type=session.error") }, log.messages.joinToString("\n"))
+    }
+
+    /**
+     * A cancellation the CLI starts on its own reaches the UI as the same `MessageAbortedError` a Stop
+     * produces, so the reason has to travel on its own event through the same stream.
+     */
+    @Test
+    fun `interrupt emits one reason event per running session`() = runBlocking {
+        val port = mock.start()
+        val chat = KiloBackendChatManager(scope, TestLog())
+        chat.start(OkHttpClient(), port, MutableSharedFlow())
+
+        // UNDISPATCHED runs the collector up to its first suspension on this thread, so the subscription
+        // is registered before interrupt() emits — the flow buffers rather than blocks, so a late
+        // subscriber would simply miss the event.
+        val received = async(start = CoroutineStart.UNDISPATCHED) {
+            chat.events.first { it is ChatEventDto.SessionInterrupted }
+        }
+        chat.interrupt(listOf("ses_abc"), ChatEventDto.SessionInterrupted.RELOAD)
+
+        val event = withTimeout(5_000) { received.await() }
+        assertTrue(event is ChatEventDto.SessionInterrupted)
+        assertEquals("ses_abc", event.sessionID)
+        assertEquals(ChatEventDto.SessionInterrupted.RELOAD, event.reason)
+    }
+
+    @Test
+    fun `global message event type is extracted from payload`() = runBlocking {
+        val port = mock.start()
+        val sse = MutableSharedFlow<SseEvent>(replay = 8)
+        val chat = KiloBackendChatManager(scope, TestLog())
+        chat.start(OkHttpClient(), port, sse)
+
+        val received = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(5_000) { chat.events.first() } }
+        withTimeout(5_000) { sse.subscriptionCount.first { it > 0 } }
+        sse.emit(SseEvent("message", """{"payload":{"type":"session.queue.changed","properties":{"sessionID":"ses_abc","queued":["msg2"]}}}"""))
+
+        val event = received.await()
+        assertTrue(event is ChatEventDto.SessionQueueChanged)
+        assertEquals("ses_abc", event.sessionID)
+        assertEquals(listOf("msg2"), event.queued)
     }
 }

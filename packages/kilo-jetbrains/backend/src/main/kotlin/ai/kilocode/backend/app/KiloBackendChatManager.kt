@@ -4,7 +4,6 @@ import ai.kilocode.backend.cli.KiloCliDataParser
 import ai.kilocode.log.ChatLogSummary
 import ai.kilocode.log.KiloLog
 import ai.kilocode.rpc.dto.ChatEventDto
-import ai.kilocode.rpc.dto.ConfigUpdateDto
 import ai.kilocode.rpc.dto.MessageWithPartsDto
 import ai.kilocode.rpc.dto.ModelSelectionDto
 import ai.kilocode.rpc.dto.PermissionAlwaysRulesDto
@@ -65,6 +64,7 @@ class KiloBackendChatManager(
             "session.status",
             "session.updated",
             "session.idle",
+            "session.queue.changed",
             "session.compacted",
             "session.diff",
             "permission.asked",
@@ -90,14 +90,15 @@ class KiloBackendChatManager(
         if (watcher?.isActive == true) return
         watcher = cs.launch {
             sse.collect { event ->
-                if (event.type in CHAT_EVENTS) {
+                val type = if (event.type in CHAT_EVENTS) event.type else KiloCliDataParser.extractEventType(event.data)
+                if (type in CHAT_EVENTS) {
                     val events = try {
-                        normalizer.parse(event.type, event.data)
+                        normalizer.parse(type, event.data)
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
                         log.warn(
-                            "route=chat-events parse=false type=${event.type} bytes=${event.data.length} ${ChatLogSummary.body(event.data)}",
+                            "route=chat-events parse=false type=$type raw=${event.type} bytes=${event.data.length} ${ChatLogSummary.body(event.data)}",
                             e,
                         )
                         return@collect
@@ -120,7 +121,7 @@ class KiloBackendChatManager(
                             _events.emit(parsed)
                         }
                     } else {
-                        log.warn("route=chat-events parse=null type=${event.type} bytes=${event.data.length} ${ChatLogSummary.body(event.data)}")
+                        log.warn("route=chat-events parse=null type=$type raw=${event.type} bytes=${event.data.length} ${ChatLogSummary.body(event.data)}")
                     }
                 }
             }
@@ -264,6 +265,27 @@ class KiloBackendChatManager(
         postCancellable("/session/$id/revert?directory=${encode(dir)}", body, "revert", "${ChatLogSummary.sid(id)} kind=revert")
     }
 
+    suspend fun deleteMessage(id: String, dir: String, message: String): Boolean {
+        log.info("${ChatLogSummary.sid(id)} kind=deleteMessage ${ChatLogSummary.dir(dir)} message=$message")
+        val http = requireClient()
+        val url = requireBase()
+        val request = Request.Builder()
+            .url("$url/session/$id/message/$message?directory=${encode(dir)}")
+            .delete()
+            .build()
+        val call = http.newCall(request)
+        call.timeout().timeout(REVERT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        return call.await().use { response ->
+            val raw = response.body?.string().orEmpty().trim()
+            if (!response.isSuccessful) {
+                log.warn("deleteMessage failed: HTTP ${response.code}")
+                raw.takeIf { it.isNotBlank() }?.let { log.debug { "${ChatLogSummary.sid(id)} kind=deleteMessage error=${ChatLogSummary.body(it)}" } }
+                return@use false
+            }
+            raw != "false"
+        }
+    }
+
     suspend fun unrevert(id: String, dir: String) {
         log.info("${ChatLogSummary.sid(id)} kind=unrevert ${ChatLogSummary.dir(dir)}")
         postCancellable("/session/$id/unrevert?directory=${encode(dir)}", "{}", "unrevert", "${ChatLogSummary.sid(id)} kind=unrevert")
@@ -304,25 +326,22 @@ class KiloBackendChatManager(
             }
     }
 
-    // ------ config update ------
+    // ------ interruption ------
 
-    fun updateConfig(dir: String, update: ConfigUpdateDto) {
-        val http = requireClient()
-        val url = requireBase()
-
-        val partial = KiloCliDataParser.buildConfigPartial(update)
-
-        val request = Request.Builder()
-            .url("$url/global/config")
-            .patch(partial.toRequestBody(JSON_TYPE))
-            .build()
-
-        http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                val msg = response.body?.string() ?: "unknown error"
-                log.warn("config update failed: HTTP ${response.code} — $msg")
-            } else {
-                log.info("Config updated: model=${update.model}, agent=${update.agent}, temp=${update.temperature}")
+    /**
+     * Tell every session in [ids] that the CLI stopped its turn for [reason].
+     *
+     * Synthesized into the same stream the CLI events use so a session's own controller sees it in
+     * order with the abort it explains. The CLI cannot express this itself: it reports a server-side
+     * cancellation as the same `MessageAbortedError` a user Stop produces, so the UI would otherwise
+     * report work nobody stopped as "Stopped".
+     */
+    fun interrupt(ids: Collection<String>, reason: String) {
+        if (ids.isEmpty()) return
+        cs.launch {
+            for (id in ids) {
+                log.warn("${ChatLogSummary.sid(id)} kind=interrupt route=chat-events reason=$reason")
+                _events.emit(ChatEventDto.SessionInterrupted(id, reason))
             }
         }
     }

@@ -11,7 +11,23 @@
 
 import * as path from "path"
 import * as fs from "fs"
-import { normalizePath } from "./git-import"
+import { pathKey } from "./project/paths"
+import type { SidebarTarget } from "./project/route"
+
+/** Accept a persisted sidebar target only when its shape matches a known kind. */
+function validTarget(value: unknown): SidebarTarget | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const target = value as Record<string, unknown>
+  if (typeof target.projectId !== "string") return undefined
+  if (target.kind === "local") return { projectId: target.projectId, kind: "local" }
+  if (target.kind === "worktree" && typeof target.worktreeId === "string") {
+    return { projectId: target.projectId, kind: "worktree", worktreeId: target.worktreeId }
+  }
+  if (target.kind === "session" && typeof target.sessionId === "string") {
+    return { projectId: target.projectId, kind: "session", sessionId: target.sessionId }
+  }
+  return undefined
+}
 
 export interface Worktree {
   id: string
@@ -72,6 +88,7 @@ export interface ManagedSession {
 interface StateFile {
   worktrees: Record<string, Omit<Worktree, "id">>
   sessions: Record<string, Omit<ManagedSession, "id">>
+  closedSessions?: Record<string, string | null>
   sections?: Record<string, Omit<Section, "id">>
   tabOrder?: Record<string, string[]>
   worktreeOrder?: string[]
@@ -79,6 +96,7 @@ interface StateFile {
   sidebarCollapsed?: boolean
   reviewDiffStyle?: "unified" | "split"
   defaultBaseBranch?: string
+  activeTarget?: SidebarTarget
 }
 
 export type StateLoadStatus = "loaded" | "missing" | "failed"
@@ -90,6 +108,7 @@ export interface StateLoadResult extends MigrationResult {
 import { KILO_DIR, migrateAgentManagerData, type MigrationResult } from "./constants"
 
 const STATE_FILE = "agent-manager.json"
+const CLOSED_LIMIT = 1_000
 
 let counter = 0
 
@@ -101,6 +120,7 @@ export class WorktreeStateManager {
   private readonly file: string
   private worktrees = new Map<string, Worktree>()
   private sessions = new Map<string, ManagedSession>()
+  private closed = new Map<string, string | null>()
   private sections = new Map<string, Section>()
   private tabOrder: Record<string, string[]> = {}
   private worktreeOrder: string[] = []
@@ -108,6 +128,7 @@ export class WorktreeStateManager {
   private sidebar = false
   private reviewDiffStyle: "unified" | "split" = "unified"
   private defaultBase: string | undefined
+  private activeTarget: SidebarTarget | undefined
   private readonly log: (msg: string) => void
   private saving: Promise<void> | undefined
   private dirty = false
@@ -135,11 +156,17 @@ export class WorktreeStateManager {
     return this.worktrees.get(id)
   }
 
-  /** Find worktree by its filesystem path. */
+  /**
+   * Find worktree by its filesystem path.
+   *
+   * Compares with `pathKey`, so a symlinked parent (`/tmp` -> `/private/tmp` on macOS) or a case
+   * variant still finds the row. A lexical compare misses both, and every caller uses the answer to
+   * decide which worktree a session, a terminal, or a tool call belongs to.
+   */
   findWorktreeByPath(wtPath: string): Worktree | undefined {
-    const target = normalizePath(wtPath)
+    const target = pathKey(wtPath)
     for (const wt of this.worktrees.values()) {
-      if (normalizePath(wt.path) === target) return wt
+      if (pathKey(wt.path) === target) return wt
     }
     return undefined
   }
@@ -152,6 +179,10 @@ export class WorktreeStateManager {
 
   getSession(id: string): ManagedSession | undefined {
     return this.sessions.get(id)
+  }
+
+  isSessionClosed(id: string): boolean {
+    return this.closed.has(id)
   }
 
   /** Returns the worktree directory for a session, or undefined for local sessions. */
@@ -310,6 +341,10 @@ export class WorktreeStateManager {
       }
     }
 
+    for (const [session, worktree] of this.closed) {
+      if (worktree === id) this.closed.delete(session)
+    }
+
     // Clean up tab order for this worktree
     delete this.tabOrder[id]
 
@@ -321,6 +356,7 @@ export class WorktreeStateManager {
   }
 
   addSession(sessionId: string, worktreeId: string | null): ManagedSession {
+    this.closed.delete(sessionId)
     const session: ManagedSession = { id: sessionId, worktreeId, createdAt: new Date().toISOString() }
     this.sessions.set(sessionId, session)
     const worktree = worktreeId ? this.worktrees.get(worktreeId) : undefined
@@ -352,6 +388,13 @@ export class WorktreeStateManager {
     void this.save()
   }
 
+  closeSession(id: string, worktreeId: string | null): void {
+    this.closed.delete(id)
+    this.closed.set(id, worktreeId)
+    if (this.closed.size > CLOSED_LIMIT) this.closed.delete(this.closed.keys().next().value!)
+    void this.save()
+  }
+
   removeSession(id: string): void {
     this.sessions.delete(id)
 
@@ -380,8 +423,20 @@ export class WorktreeStateManager {
     void this.save()
   }
 
-  removeTabOrder(key: string): void {
-    delete this.tabOrder[key]
+  /** Last selected sidebar target (Local/worktree/session) for seamless restore. */
+  getActiveTarget(): SidebarTarget | undefined {
+    return this.activeTarget
+  }
+
+  setActiveTarget(target: SidebarTarget | undefined): void {
+    const cur = this.activeTarget
+    const same =
+      cur?.kind === target?.kind &&
+      cur?.projectId === target?.projectId &&
+      (cur?.kind !== "worktree" || target?.kind !== "worktree" || cur.worktreeId === target.worktreeId) &&
+      (cur?.kind !== "session" || target?.kind !== "session" || cur.sessionId === target.sessionId)
+    if (same) return
+    this.activeTarget = target
     void this.save()
   }
 
@@ -674,6 +729,7 @@ export class WorktreeStateManager {
     const data = JSON.parse(content) as StateFile
     this.worktrees.clear()
     this.sessions.clear()
+    this.closed.clear()
     this.sections.clear()
     this.tabOrder = {}
     this.worktreeOrder = []
@@ -702,6 +758,7 @@ export class WorktreeStateManager {
       }
       this.sessions.set(id, session)
     }
+    this.restoreClosed(data.closedSessions)
     for (const [id, sec] of Object.entries(data.sections ?? {})) {
       this.sections.set(id, { id, ...sec })
     }
@@ -719,6 +776,7 @@ export class WorktreeStateManager {
       this.reviewDiffStyle = "split"
     }
     this.defaultBase = data.defaultBaseBranch
+    this.activeTarget = validTarget(data.activeTarget)
     this.log(`Loaded state: ${this.worktrees.size} worktrees, ${this.sessions.size} sessions`)
     if (pruned > 0 || repaired) {
       if (pruned > 0) this.log(`Pruned ${pruned} orphaned sessions`)
@@ -726,31 +784,21 @@ export class WorktreeStateManager {
     }
   }
 
-  /** Remove worktrees whose directories no longer exist on disk and prune orphaned sessions. */
-  async validate(root: string): Promise<void> {
-    let changed = false
-    for (const wt of [...this.worktrees.values()]) {
-      const resolved = path.isAbsolute(wt.path) ? wt.path : path.join(root, wt.path)
-      if (!fs.existsSync(resolved)) {
-        this.log(`Worktree ${wt.id} directory missing (${resolved}), removing`)
-        this.removeWorktree(wt.id)
-        changed = true
-      }
-    }
-    // Preserve local sessions; prune only sessions that reference missing worktrees.
-    for (const s of [...this.sessions.values()]) {
-      const ref = s.worktreeId
-      if (ref === null) continue
-      if (!ref || !this.worktrees.has(ref)) {
-        this.sessions.delete(s.id)
-        changed = true
-      }
-    }
-    if (changed) {
-      this.log(`Pruned orphaned sessions during validation`)
-      await this.save()
+  private restoreClosed(value: StateFile["closedSessions"]): void {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return
+    for (const [id, ref] of Object.entries(value)) {
+      if (ref === null || (typeof ref === "string" && this.worktrees.has(ref))) this.closed.set(id, ref)
     }
   }
+
+  /*
+   * `validate(root)` used to live here: it removed every worktree row whose directory was missing
+   * and deleted the session mappings with it. That silently discarded conversation history for
+   * worktrees a user could still restore from their branch, and it never ran — nothing in src/
+   * called it. Worktree health now lives in worktree-reconcile.ts, which classifies rows instead of
+   * deleting them and only drops a row when the directory, the branch, and the sessions are all
+   * gone.
+   */
 
   /** Wait for any in-flight save to complete without triggering a new one. */
   async flush(): Promise<void> {
@@ -804,6 +852,7 @@ export class WorktreeStateManager {
       const { id: _, ...rest } = s
       data.sessions[id] = rest
     }
+    if (this.closed.size > 0) data.closedSessions = Object.fromEntries(this.closed)
     if (this.sections.size > 0) {
       data.sections = {}
       for (const [id, sec] of this.sections) {
@@ -826,6 +875,9 @@ export class WorktreeStateManager {
     }
     if (this.defaultBase) {
       data.defaultBaseBranch = this.defaultBase
+    }
+    if (this.activeTarget) {
+      data.activeTarget = this.activeTarget
     }
 
     const tmp = `${this.file}.${process.pid}.${Date.now()}.tmp`

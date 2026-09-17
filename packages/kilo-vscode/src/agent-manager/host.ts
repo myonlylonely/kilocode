@@ -9,6 +9,8 @@
  */
 
 import type { Session } from "@kilocode/sdk/v2/client"
+import type { ProjectRef, SessionRef, WorktreeRef } from "./project/route"
+import type { PRMergeMethod } from "./types"
 
 // ---------------------------------------------------------------------------
 // Primitives
@@ -24,6 +26,8 @@ export interface Disposable {
 
 export interface OutputHandle {
   appendLine(msg: string): void
+  /** Reveal the channel, e.g. after writing a report the user asked for. */
+  show?(): void
   dispose(): void
 }
 
@@ -36,6 +40,8 @@ export interface SessionProvider {
   clearSessionDirectory(id: string): void
   getSessionDirectories(): ReadonlyMap<string, string>
   getSessionInfo?(id: string): Promise<Session | undefined>
+  /** List root sessions (no parent) whose directory exactly matches `dir`. */
+  listSessions?(dir: string): Promise<Session[]>
   trackSession(id: string): void
   refreshSessions(): void
   registerSession(session: Session): void
@@ -49,6 +55,22 @@ export interface SessionProvider {
   abortSessions(ids: readonly string[]): Promise<void>
   showMemory(sessionID?: string): Promise<void>
   toggleMemory(sessionID?: string): Promise<void>
+  /** Register a project root with the shared route service. */
+  registerProjectRoute?(ref: ProjectRef, root: string, generation: number): void
+  /** Drop a project and all its session/worktree routes. */
+  unregisterProjectRoute?(projectId: string): void
+  /** Register a worktree directory under a project. */
+  registerWorktreeRoute?(ref: WorktreeRef, directory: string, generation: number): void
+  /** Register a session directory under a project (exact routing). */
+  registerSessionRoute?(ref: SessionRef, directory: string, generation: number): void
+  /** Drop one session route (keeps the raw ambiguity index consistent). */
+  unregisterSessionRoute?(ref: SessionRef): void
+  /** Whether a raw session id is known to be ambiguous across projects. */
+  isSessionRouteAmbiguous?(sessionId: string): boolean
+  /** Exact directory for a project-qualified session ref, or undefined. */
+  routeSessionDirectoryFor?(ref: SessionRef): string | undefined
+  /** Re-check Git capability for the active project/session directory. */
+  refreshGitStatus?(): void
   dispose(): void
 }
 
@@ -99,10 +121,49 @@ export interface Host {
   openPanel(opts: {
     onBeforeMessage: (msg: Record<string, unknown>) => Promise<Record<string, unknown> | null>
     worktreeDirectories?: () => string[]
+    /** Dynamic root directory for the panel's session provider (follows the active project). */
+    workspaceRoot?: () => string | undefined
+    projectId?: () => string | undefined
   }): PanelContext
 
   /** Get the workspace/project root path. */
   workspacePath(): string | undefined
+
+  /** Local files with unsaved editor changes. */
+  dirtyFiles(): string[]
+
+  /** Show a folder picker and return the selected path, or undefined when cancelled. */
+  pickFolder(): Promise<string | undefined>
+
+  /** Whether the experimental multi-project Agent Manager mode is enabled. */
+  multiProject(): boolean
+  browserAutomation(): boolean
+
+  /** Whether background worktree pre-warming is enabled. */
+  worktreePool(): boolean
+
+  /** Listen for changes to the worktree pre-warming setting. */
+  onDidChangeWorktreePool(cb: (enabled: boolean) => void): Disposable
+
+  /** Read the persisted additional-project registry payload. */
+  readProjects(): unknown
+
+  /** Persist the additional-project registry payload. */
+  writeProjects(value: unknown): Promise<void>
+
+  /** Read and persist the user's last PR merge method per repository. */
+  getPRMergeMethod?(repo: string): PRMergeMethod | undefined
+  savePRMergeMethod?(repo: string, method: PRMergeMethod): Promise<void>
+
+  unregisterProjectRoutes(projectId: string): void
+
+  /** Subscribe to workspace folder changes (pinned project re-derivation). */
+  onDidChangeWorkspaceFolders(cb: () => void): Disposable
+
+  /** Subscribe to multi-project flag changes. */
+  onDidChangeMultiProject(cb: (enabled: boolean) => void): Disposable
+  /** Whether the workspace permits executing configured scripts. */
+  isTrusted(): boolean
 
   /** Read the user's automatic branch naming preferences. */
   autoBranchNaming(): { enabled: boolean; prefix: string }
@@ -123,10 +184,7 @@ export interface Host {
   createOutput(name: string): OutputHandle
 
   /** Read extension keybinding metadata. */
-  extensionKeybindings(): Array<{ command: string; key?: string; mac?: string }>
-
-  /** Get the CLI server port (for webview CSP). */
-  serverPort(): number | undefined
+  extensionKeybindings(): Array<{ command: string; key?: string; mac?: string; when?: string }>
 
   /** Copy text to the system clipboard. */
   copyToClipboard(text: string): void
@@ -136,6 +194,9 @@ export interface Host {
 
   /** Open a URL in the user's default browser. */
   openExternal(url: string): void
+
+  /** Open Kilo Settings, optionally focused on a tab and project. */
+  openSettings(tab?: string, projectId?: string): void
 
   /** Ask VS Code's git extension to re-scan repositories (e.g. after worktree ref migration). */
   refreshGit(): void
