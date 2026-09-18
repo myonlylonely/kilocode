@@ -7,6 +7,7 @@ import { VisibleCodeTracker } from "../context/VisibleCodeTracker"
 import { FileIgnoreController } from "../shims/FileIgnoreController"
 import type { KiloConnectionService } from "../../cli-backend"
 import { generateFim, hasValidCredentials, fimModel as getChatAutocompleteModel } from "../fim"
+import { getFimFormat } from "../settings"
 import { finalizeChatSuggestion, buildChatPrefix } from "./chat-autocomplete-utils"
 
 interface ChatCompletionRequestMessage {

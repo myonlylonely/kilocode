@@ -1,8 +1,14 @@
 import { ResponseMetaData } from "./types"
 import type { KiloConnectionService } from "../cli-backend"
 import { getAutocompleteModel, getAutocompleteModelById } from "../../shared/autocomplete-models"
+import { createHash } from "node:crypto"
 
 const FIM_MAX_TOKENS = 256
+
+export function getFimSessionId(modelId: string, scope?: string) {
+  if (!scope) return undefined
+  return createHash("sha256").update(modelId).update("\0").update(scope).digest("hex")
+}
 
 export function fimModel(provider?: string, model?: string) {
   const info = getAutocompleteModel(provider, model)
