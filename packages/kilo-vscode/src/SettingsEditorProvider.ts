@@ -67,10 +67,11 @@ export class SettingsEditorProvider implements vscode.Disposable {
     if (existing) {
       this.providers.get(view)?.setProjectDirectory(projectDirectory)
       existing.reveal(vscode.ViewColumn.Active)
+      const appView = view === "indexing" ? "settings" : view
       this.providers.get(view)?.postMessage({
         type: "navigate",
-        view,
-        ...(tab ? { tab } : {}),
+        view: appView,
+        ...(tab || view === "indexing" ? { tab: tab ?? "indexing" } : {}),
         ...(projectId ? { projectId } : {}),
       })
       return
@@ -108,10 +109,15 @@ export class SettingsEditorProvider implements vscode.Disposable {
 
     // Create a dedicated KiloProvider for this panel so it has full
     // backend connectivity (config, providers, agents, profile, auth).
+    // Seed the target view into the HTML so first paint is Settings/Profile
+    // even if the post-webviewReady navigate races AppContent mount.
+    const appView = view === "indexing" ? "settings" : view
     const provider = new KiloProvider(this.extensionUri, this.connectionService, this.context, {
       projectDirectory,
       hideTopBar: true,
-      agentManagerSettings: view === "settings" ? this.agentManagerSettings : undefined,
+      initialView: appView,
+      initialSettingsTab: this.tabs.get(view) ?? (view === "indexing" ? "indexing" : undefined),
+      agentManagerSettings: view === "settings" || view === "indexing" ? this.agentManagerSettings : undefined,
     })
     if (this.remoteService) {
       provider.setRemoteService(this.remoteService)
@@ -133,8 +139,8 @@ export class SettingsEditorProvider implements vscode.Disposable {
         setTimeout(() => {
           provider.postMessage({
             type: "navigate",
-            view,
-            tab: this.tabs.get(view),
+            view: appView,
+            tab: this.tabs.get(view) ?? (view === "indexing" ? "indexing" : undefined),
             projectId: this.projects.get(view),
           })
         }, 50)

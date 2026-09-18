@@ -50,6 +50,14 @@ export type KiloProviderOptions = {
    * away from the panel's one job. Sidebar and "Open in Tab" leave this unset.
    */
   hideTopBar?: boolean
+  /**
+   * Synchronous first paint for dedicated panels. Seeded into the webview HTML
+   * so Settings/Profile/Sub-Agent Viewer never flash (or stick on) the default
+   * chat view when the post-`webviewReady` navigate races AppContent mount.
+   */
+  initialView?: "settings" | "profile" | "subAgentViewer"
+  /** Optional settings tab to open with {@link initialView} `"settings"`. */
+  initialSettingsTab?: string
   /** Reports "Open in Tab" as the top bar's telemetry surface instead of the sidebar default. */
   topBarSurface?: "tab"
   /** Project-aware settings used by the standalone Agent Manager settings tab. */

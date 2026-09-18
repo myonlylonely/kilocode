@@ -538,8 +538,14 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("kilo-code.new.profileButtonClicked", () => {
       settingsEditorProvider.openPanel("profile")
     }),
-    vscode.commands.registerCommand("kilo-code.new.settingsButtonClicked", (tab?: string, projectId?: string) => {
-      settingsEditorProvider.openPanel("settings", tab, projectId)
+    vscode.commands.registerCommand("kilo-code.new.settingsButtonClicked", (tab?: unknown, projectId?: unknown) => {
+      // editor/title contributions pass the active resource Uri as the first
+      // arg — only treat real strings as settings tab / project ids.
+      settingsEditorProvider.openPanel(
+        "settings",
+        typeof tab === "string" ? tab : undefined,
+        typeof projectId === "string" ? projectId : undefined,
+      )
     }),
     vscode.commands.registerCommand("kilo-code.new.openIndexingSettings", () => {
       settingsEditorProvider.openPanel("settings", "indexing")

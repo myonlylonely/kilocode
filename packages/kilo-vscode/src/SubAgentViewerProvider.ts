@@ -44,6 +44,7 @@ export class SubAgentViewerProvider implements vscode.Disposable {
 
     const provider = new KiloProvider(this.extensionUri, this.connectionService, this.context, {
       hideTopBar: true,
+      initialView: "subAgentViewer",
       tabTitle: (title) => {
         panel.title = title
       },

@@ -5745,6 +5745,8 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
       // VS Code's native toolbar (restored in package.json) works everywhere.
       topBar: this.opts.hideTopBar !== true && isCursorHost(),
       topBarSurface: this.opts.topBarSurface === "tab" ? "tab_title" : "sidebar_title",
+      initialView: this.opts.initialView,
+      initialSettingsTab: this.opts.initialSettingsTab,
       agentManagerSettings: this.opts.agentManagerSettings !== undefined,
     })
   }

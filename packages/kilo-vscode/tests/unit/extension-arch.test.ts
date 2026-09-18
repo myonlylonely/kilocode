@@ -309,6 +309,18 @@ describe("Extension — editor panel placement", () => {
     expect(body.match(/vscode\.ViewColumn\.Active/g)).toHaveLength(2)
     expect(body).not.toContain("vscode.ViewColumn.One")
   })
+
+  it("seeds Settings/Profile first paint so navigate races cannot stick on chat", () => {
+    expect(settings).toContain('initialView: appView')
+    expect(settings).toContain("initialSettingsTab:")
+    const util = fs.readFileSync(path.join(ROOT, "src/utils.ts"), "utf-8")
+    expect(util).toContain("KILO_INITIAL_VIEW")
+    expect(util).toContain("KILO_INITIAL_SETTINGS_TAB")
+    const app = fs.readFileSync(path.join(ROOT, "webview-ui/src/App.tsx"), "utf-8")
+    expect(app).toContain("bootView()")
+    expect(app).toContain("bootSettingsTab()")
+    expect(ext).toContain('typeof tab === "string" ? tab : undefined')
+  })
 })
 
 // ---------------------------------------------------------------------------

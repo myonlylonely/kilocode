@@ -37,6 +37,17 @@ import "./styles/chat.css"
 type ViewType = "newTask" | "history" | "profile" | "settings" | "subAgentViewer"
 const VALID_VIEWS = new Set<string>(["newTask", "history", "profile", "settings", "subAgentViewer"])
 
+function bootView(): ViewType {
+  const view = (window as { KILO_INITIAL_VIEW?: string | null }).KILO_INITIAL_VIEW
+  if (view && VALID_VIEWS.has(view)) return view as ViewType
+  return "newTask"
+}
+
+function bootSettingsTab(): string | undefined {
+  const tab = (window as { KILO_INITIAL_SETTINGS_TAB?: string | null }).KILO_INITIAL_SETTINGS_TAB
+  return typeof tab === "string" && tab.length > 0 ? tab : undefined
+}
+
 /**
  * Bridge our session store to the DataProvider's expected Data shape.
  *
@@ -240,8 +251,8 @@ export const DataBridge: Component<{ children: any }> = (props) => {
 
 // Inner app component that uses the contexts
 const AppContent: Component = () => {
-  const [currentView, setCurrentView] = createSignal<ViewType>("newTask")
-  const [settingsTab, setSettingsTab] = createSignal<string | undefined>()
+  const [currentView, setCurrentView] = createSignal<ViewType>(bootView())
+  const [settingsTab, setSettingsTab] = createSignal<string | undefined>(bootSettingsTab())
   const [agentManagerProjectId, setAgentManagerProjectId] = createSignal<string | undefined>()
   const [migration, setMigration] = createSignal(false)
   const session = useSession()
