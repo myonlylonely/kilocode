@@ -20,7 +20,11 @@ import {
   selectedSpeechToTextModel,
 } from "../speech-to-text/availability"
 import { speechToTextModelOptions } from "../speech-to-text/model-selector"
-import { AUTOCOMPLETE_SELECTOR_MODELS, getAutocompleteSelection } from "./autocomplete-model-selector"
+import {
+  AUTOCOMPLETE_SELECTOR_MODELS,
+  getAutocompleteSelection,
+  isCustomAutocompleteSelection,
+} from "./autocomplete-model-selector"
 import { preserveVariant } from "../../context/session-variant-store"
 
 const ModelsTab: Component = () => {

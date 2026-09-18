@@ -107,6 +107,7 @@ describe("custom autocomplete model warning rendering", () => {
   )
 
   it("renders a warning card gated on the custom-model check", () => {
+    expect(modelsTab).toMatch(/import\s*\{[^}]*\bisCustomAutocompleteSelection\b[^}]*\}\s*from\s*["'].*autocomplete-model-selector["']/)
     expect(modelsTab).toContain("isCustomAutocompleteSelection")
     expect(modelsTab).toContain('data-slot="autocomplete-custom-model-warning"')
     expect(modelsTab).toMatch(/<Card\s+variant="warning"\s+role="alert"/)
